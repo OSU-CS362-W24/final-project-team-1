@@ -191,7 +191,7 @@ test ('whether current chart data is updated with currentChartData', function() 
     window.localStorage.clear()
 })
 
-test ('whether current chart data is provided by loadCurrent', function() {
+test ('whether current chart data is provided by loadCurrentChartData', function() {
     // Arrange
     const chartData = {
         type: 'bar',
