@@ -152,3 +152,41 @@ test ('whether loadSavedChart loads the correct chart', function() {
     // Clears the chart storage
     window.localStorage.clear()
 })
+
+test ('whether current chart data is updated with currentChartData', function() {
+    // Arrange
+    const chartData = {
+        type: 'bar',
+        data: {
+            labels: ['F','D','C','B','A'],
+            datasets: [{
+                label: 'Students',
+                data: [10,20,30,40,30]
+            }]
+        }
+    }
+
+    const updatedChartData = {
+        type: 'line',
+        data: {
+            labels: ['A','B','C','D','F'],
+            datasets: [{
+                label: 'Students',
+                data: [30,40,30,20,10]
+            }]
+        }
+    }
+
+    // Act
+    window.localStorage.setItem("currentChartData", JSON.stringify(chartData))
+    chartStorage.updateCurrentChartData(updatedChartData)
+    result = JSON.parse(window.localStorage.getItem("currentChartData"))
+
+    // Assert
+    expect(result).toStrictEqual(
+        updatedChartData
+    )
+
+    // Clears the chart storage
+    window.localStorage.clear()
+})
