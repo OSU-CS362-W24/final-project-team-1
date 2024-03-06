@@ -104,3 +104,51 @@ test ('whether all saved charts are found with loadAllSavedCharts', function() {
     // Clears the chart storage
     window.localStorage.clear()
 })
+
+test ('whether loadSavedChart loads the correct chart', function() {
+    // Arrange
+    const chart1 = {
+        type: 'bar',
+        data: {
+            labels: ['F','D','C','B','A'],
+            datasets: [{
+                label: 'Students',
+                data: [10,20,30,40,30]
+            }]
+        }
+    }
+
+    const chart2 = {
+        type: 'line',
+        data: {
+            labels: ['F','D','C','B','A'],
+            datasets: [{
+                label: 'Students',
+                data: [10,20,30,40,30]
+            }]
+        }
+    }
+
+    const chart3 = {
+        type: 'scatter',
+        data: {
+            labels: ['F','D','C','B','A'],
+            datasets: [{
+                label: 'Students',
+                data: [10,20,30,40,30]
+            }]
+        }
+    }
+
+    // Act
+    chartStorage.saveChart(chart1)
+    chartStorage.saveChart(chart2)
+    chartStorage.saveChart(chart3)
+    result = chartStorage.loadSavedChart(1)
+
+    // Assert
+    expect(result).toStrictEqual(chart2)
+
+    // Clears the chart storage
+    window.localStorage.clear()
+})
