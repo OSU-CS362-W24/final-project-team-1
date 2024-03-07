@@ -7,7 +7,7 @@
     "start": "webpack serve -p 3000",
     "cy:open": "cypress open",
     "cy:run": "cypress run",
-    "test:unit&integ": "jest",
+    "test": "jest",
     "test:e2e": "start-test start http://localhost:3000 cy:run"
   },
   "devDependencies": {
