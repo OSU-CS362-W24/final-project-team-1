@@ -1,7 +1,7 @@
 /**
 * @jest-environment jsdom
 */
-
+const chartBuilder = require("../chartBuilder/chartBuilder.js")
 const fs = require("fs")
 const domTesting = require('@testing-library/dom')
 require('@testing-library/jest-dom')
@@ -16,6 +16,11 @@ function initDomFromFiles(htmlPath, jsPath) {
 		require(jsPath)
 	})
 }
+
+afterEach(() => {
+    // restore the spy created with spyOn
+    jest.restoreAllMocks();
+});
 
 describe('UI tests', () => {
     test('adding values into the input fields', async function () {
@@ -69,6 +74,19 @@ describe('UI tests', () => {
         expect(Y_inputs[2].value).toBe('6')
         expect(X_inputs.length).toBe(7)
         expect(Y_inputs.length).toBe(7)
+
+    })
+    test('browser sends alert when no data entered', async function () {
+        initDomFromFiles(`${__dirname}/line.html`, `${__dirname}/line.js`)
+        const generateChartButton = domTesting.getByRole(document, 'button', {name: 'Generate chart'})
+        const newUser = userEvent.setup()
+
+        // create a spy for the alert method of the window object
+        const alertSpy = jest.spyOn(window, "alert").mockImplementation(async function() {})
+        await newUser.click(generateChartButton)
+        
+        // assert the error message!
+        expect(alertSpy).toHaveBeenCalledWith("Error: Must specify a label for both X and Y!")
 
     })
 })
