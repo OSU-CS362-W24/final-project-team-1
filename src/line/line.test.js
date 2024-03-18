@@ -2,6 +2,7 @@
 * @jest-environment jsdom
 */
 // const chartBuilder = require("../chartBuilder/chartBuilder.js")
+const sortPoints = require("../lib/sortPoints.js")
 const fs = require("fs")
 const domTesting = require('@testing-library/dom')
 require('@testing-library/jest-dom')
@@ -12,25 +13,30 @@ function initDomFromFiles(htmlPath, jsPath) {
 	document.open()
 	document.write(html)
 	document.close()
-	jest.isolateModules(function() {
-		require(jsPath)
-	})
+	require(jsPath)
 }
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+
+
 describe('UI tests', () => {
     // reset the DOM after each test and restore all mocks/spies
+    beforeEach(() => {
+        jest.resetModules()
+    })
     afterEach(() => {
+        // However, there's one other very important detail:
         jest.restoreAllMocks();
+        window.localStorage.clear(); // piazza recommended for clearing DOM Data
     })
 
     // have to test this first cause we need to clear the JSDOM elements using this function
     // or else stored data persists throughout different tests
     test('clearing the chart data works', async function () {
-
+        
         // arrange
         initDomFromFiles(`${__dirname}/line.html`, `${__dirname}/line.js`)
         const clearChartDataBtn = domTesting.getByRole(document, 'button', {name: 'Clear chart data'})
@@ -55,7 +61,7 @@ describe('UI tests', () => {
         // assert
         expect(X_input_1.value).toBe('')
         expect(Y_input_1.value).toBe('')
-    });
+    })
 
     test('adding values into the input fields', async function () {
         // arrange 
@@ -110,9 +116,10 @@ describe('UI tests', () => {
         expect(Y_inputs[2].value).toBe('6')
         expect(X_inputs.length).toBe(7)
         expect(Y_inputs.length).toBe(7)
-        await newUser.click(clearChartDataBtn)
+        // await newUser.click(clearChartDataBtn) - don't need this since afterEach() f(x)
 
     })
+
     test('browser sends alert when no data entered', async function () {
         initDomFromFiles(`${__dirname}/line.html`, `${__dirname}/line.js`)
         const clearChartDataBtn = domTesting.getByRole(document, 'button', {name: 'Clear chart data'})
@@ -125,8 +132,9 @@ describe('UI tests', () => {
 
         // assert the error message from the spy
         expect(alertSpy).toHaveBeenCalledWith("Error: No data specified!")
-        await newUser.click(clearChartDataBtn)
+        // await newUser.click(clearChartDataBtn) - don't need this since afterEach() f(x)
     })
+
     test('clear chart data works', async function () {
         initDomFromFiles(`${__dirname}/line.html`, `${__dirname}/line.js`)
         const clearChartDataBtn = domTesting.getByRole(document, 'button', {name: 'Clear chart data'})
@@ -214,4 +222,68 @@ describe('UI tests', () => {
         expect(color).toBe("#ff4500")
 
     })
+
+    test('data for generateChartImg() is correctly sent', async function() {
+        jest.mock("../lib/generateChartImg.js")
+        const generateChartImgSpy = require("../lib/generateChartImg.js")
+        
+
+        // arrange
+        initDomFromFiles(`${__dirname}/line.html`, `${__dirname}/line.js`)
+        const colorBtn = domTesting.getByLabelText(document, "Chart color", {exact: true})
+        const clearChartDataBtn = domTesting.getByRole(document, 'button', {name: 'Clear chart data'})
+        const generateChartButton = domTesting.getByRole(document, 'button', {name: 'Generate chart'})
+        const newUser = userEvent.setup()
+        const addValue = domTesting.getByRole(document, 'button', {name: '+'})
+        const X_label = domTesting.getByLabelText(document, 'X label', {exact: true})
+        const Y_label = domTesting.getByLabelText(document, 'Y label', {exact: true})
+        const chart_title = domTesting.getByLabelText(document, 'Chart title', {exact: true})
+        var retURL = ""
+        
+        // act
+        await newUser.type(X_label, "cats")
+        await newUser.type(Y_label, "dogs")
+        await newUser.type(chart_title, "cats vs dogs")
+        
+        await newUser.click(addValue)
+        await newUser.click(addValue)
+        await newUser.click(addValue)
+        await newUser.click(addValue)
+        await newUser.click(addValue)
+        
+        var X_inputs = domTesting.getAllByLabelText(document, 'X', {exact: true})
+        var Y_inputs = domTesting.getAllByLabelText(document, 'Y', {exact: true})
+
+        
+        for (let i = 0; i < X_inputs.length; i++) {
+            await newUser.type(X_inputs[i], "20")
+            await newUser.type(Y_inputs[i], "20")
+        }
+
+        X_inputs = domTesting.getAllByLabelText(document, 'X', {exact: true})
+        Y_inputs = domTesting.getAllByLabelText(document, 'Y', {exact: true})
+        
+        // to create the data block in same fashion as '../chartBuilder/chartBuilder.js:258' !dry
+        const data = []
+        for (let i = 0; i < X_inputs.length || 0; i++) {
+            const x = X_inputs[i].value.trim()
+            const y = Y_inputs[i].value.trim()
+            if (x || y) {
+                data.push({
+                    x: x,
+                    y: y
+                })
+            }
+        }
+        
+        
+        generateChartImgSpy.mockImplementation(() => {})
+        // generate type parameters: type, data, xLabel, yLabel, title, color
+        await newUser.click(generateChartButton)
+        
+        expect(generateChartImgSpy).toHaveBeenCalledWith("line", data, X_label.value, Y_label.value, chart_title.value, colorBtn.value)
+    })
+
+
 })
+
