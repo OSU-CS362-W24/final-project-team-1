@@ -25,3 +25,26 @@
 // Cypress.Commands.overwrite('visit', (originalFn, url, options) => { ... })
 
 require("@testing-library/cypress/add-commands")
+
+Cypress.Commands.add("makeLineChart", function (title, x, y) {
+    // navigate to the line chart page
+    cy.findByText("Line").click()
+
+    // enter in chart title
+    cy.findByLabelText("Chart title").type(title)
+
+    // enter in axis labels
+    cy.findByLabelText("X label").type("Cats")
+    cy.findByLabelText("Y label").type("Dogs")
+
+    // enter in data points
+    for (let i = 0; i < 5; i++) {
+        cy.findByText("+").click()
+
+        // input value into input fields
+        cy.get(`:nth-child(${4 + 2*i}) >.x-value-input`).type(x[i])
+        cy.get(`:nth-child(${5 + 2*i}) >.y-value-input`).type(y[i])
+    }
+
+    cy.findByText("Generate chart").click()
+})
