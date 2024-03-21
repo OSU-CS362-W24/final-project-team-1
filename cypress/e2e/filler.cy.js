@@ -91,6 +91,7 @@ it("The data is filled out and is the same on other pages", function() {
     //loops through the y inputs and ensures the values are correct on the scatter graph
     for (let i = 1; i <= 5; i++) {
         cy.get(".y-value-input").eq(i - 1).should("have.value", i)
+
     }
     cy.findByText("Bar")
         .click()
